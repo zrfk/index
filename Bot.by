@@ -1,0 +1,110 @@
+import csv
+import os
+import asyncio
+from datetime import datetime
+from fpdf import FPDF
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+
+# ملف حفظ المصروفات
+CSV_FILE = "expenses.csv"
+
+# إنشاء ملف المصروفات إذا لم يكن موجودًا
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow(["التاريخ", "الوصف", "المبلغ"])
+
+def add_expense(description: str, amount: float):
+    """إضافة مصروف جديد إلى الملف"""
+    date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([date_str, description, amount])
+
+def generate_pdf_for_current_month() -> str:
+    """إنشاء تقرير PDF للمصروفات الخاصة بالشهر الحالي"""
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="تقرير المصروفات للشهر الحالي", ln=True, align="C")
+    pdf.ln(10)
+    
+    total = 0.0
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    
+    with open(CSV_FILE, mode="r", encoding="utf-8") as file:
+        reader = csv.reader(file)
+        next(reader)  # تخطي رأس الأعمدة
+        for row in reader:
+            try:
+                date_str, description, amount_str = row
+                expense_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                if expense_date.year == current_year and expense_date.month == current_month:
+                    pdf.cell(0, 10, f"{date_str} - {description} - {amount_str} ريال", ln=True)
+                    total += float(amount_str)
+            except Exception:
+                continue
+
+    pdf.ln(10)
+    pdf.cell(0, 10, f"الإجمالي: {total} ريال", ln=True, align="R")
+    
+    pdf_filename = f"expenses_{current_year}_{current_month}.pdf"
+    pdf.output(pdf_filename)
+    return pdf_filename
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """إرسال رسالة ترحيبية وتعليمات الاستخدام"""
+    await update.message.reply_text(
+        "مرحبًا بك في بوت المصروفات!\n\n"
+        "لإضافة مصروف، استخدم الأمر التالي:\n"
+        "/expense الوصف;المبلغ\n\n"
+        "مثال:\n"
+        "/expense قهوة;15\n\n"
+        "وللحصول على تقرير المصروفات لهذا الشهر، استخدم الأمر:\n"
+        "/report"
+    )
+
+async def expense(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """إضافة مصروف عند استقبال أمر /expense"""
+    text = update.message.text
+    parts = text.split(" ", 1)
+    if len(parts) < 2:
+        await update.message.reply_text("يرجى كتابة المصروف بصيغة: /expense الوصف;المبلغ")
+        return
+
+    data = parts[1].split(";", 1)
+    if len(data) < 2:
+        await update.message.reply_text("يرجى كتابة المصروف بصيغة: /expense الوصف;المبلغ")
+        return
+
+    description = data[0].strip()
+    try:
+        amount = float(data[1].strip())
+    except ValueError:
+        await update.message.reply_text("المبلغ يجب أن يكون رقمًا.")
+        return
+
+    add_expense(description, amount)
+    await update.message.reply_text(f"تم إضافة المصروف: {description} - {amount} ريال")
+
+async def report(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """إرسال تقرير المصروفات كملف PDF"""
+    pdf_filename = generate_pdf_for_current_month()
+    await update.message.reply_document(document=open(pdf_filename, 'rb'))
+
+async def main():
+    TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"  # ضع توكن البوت هنا
+
+    app = Application.builder().token(TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("expense", expense))
+    app.add_handler(CommandHandler("report", report))
+
+    print("البوت يعمل الآن...")
+    await app.run_polling()
+
+if __name__ == '__main__':
+    asyncio.run(main())
