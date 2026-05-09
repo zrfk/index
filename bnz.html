@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حاسبة الوقود والمسافات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --green: #4ade80;
+    --green-dim: #22c55e;
+    --green-glow: rgba(74, 222, 128, 0.15);
+    --bg: #050505;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #252525;
+    --text: #e8e8e8;
+    --muted: #888;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+}
+
+body {
+    font-family: 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--text);
+}
+
+.container {
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    padding: 40px 25px 30px;
+    position: relative;
+}
+
+.header::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 2px;
+    background: var(--green);
+    margin: 20px auto 0;
+}
+
+.header h1 {
+    font-size: 2em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.header p {
+    color: var(--muted);
+    font-size: 0.95em;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin: 30px 0 25px;
+    background: var(--surface);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+.tab {
+    flex: 1;
+    padding: 11px 16px;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    cursor: pointer;
+    font-size: 0.92em;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-radius: 7px;
+    white-space: nowrap;
+}
+
+.tab:hover { color: #fff; }
+
+.tab.active {
+    background: var(--surface2);
+    color: var(--green);
+    border: 1px solid var(--border);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Section */
+.section {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 18px;
+    border: 1px solid var(--border);
+}
+
+.section h3 {
+    color: #fff;
+    margin-bottom: 22px;
+    font-size: 1.05em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section h3::before {
+    content: '';
+    width: 3px;
+    height: 18px;
+    background: var(--green);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* Form */
+.form-group { margin-bottom: 18px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+label {
+    display: block;
+    margin-bottom: 7px;
+    color: #bbb;
+    font-weight: 500;
+    font-size: 0.88em;
+}
+
+input[type="number"],
+input[type="text"],
+select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95em;
+    font-family: inherit;
+    background: #0a0a0a;
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.input-hint {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 5px;
+}
+
+/* Buttons */
+.btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--green);
+    border: 1px solid var(--green);
+    border-radius: 7px;
+    font-size: 0.92em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: var(--green);
+    color: #000;
+}
+
+button.secondary {
+    border-color: var(--border);
+    color: var(--muted);
+}
+
+button.secondary:hover {
+    background: var(--surface2);
+    color: #fff;
+    border-color: #555;
+}
+
+button.danger {
+    border-color: var(--danger);
+    color: var(--danger);
+    padding: 7px 14px;
+    font-size: 0.82em;
+}
+
+button.danger:hover { background: var(--danger); color: #fff; }
+
+/* Info box */
+.info-box {
+    background: #0c1a0c;
+    border: 1px solid #1e3a1e;
+    border-right: 3px solid var(--green);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border-radius: 7px;
+}
+
+.info-box h4 { color: var(--green); font-size: 0.92em; margin-bottom: 6px; }
+.info-box p { color: #999; font-size: 0.87em; line-height: 1.7; }
+
+/* Result box */
+.result-box {
+    background: #080f08;
+    border: 1px solid #1e3a1e;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 18px;
+}
+
+.result-box h4 {
+    color: var(--green);
+    font-size: 1em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #111f11;
+}
+
+.result-item:last-child { border-bottom: none; }
+.result-label { color: #aaa; font-size: 0.92em; }
+
+.result-value {
+    color: var(--green);
+    font-weight: 600;
+    font-size: 1.05em;
+}
+
+/* Save button */
+.save-area {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.save-area input[type="text"] {
+    flex: 1;
+    min-width: 160px;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #0a0a0a;
+    padding: 18px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: border-color 0.2s;
+}
+
+.stat-card:hover { border-color: #333; }
+
+.stat-value {
+    font-size: 1.7em;
+    color: var(--green);
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1;
+}
+
+.stat-label { color: var(--muted); font-size: 0.82em; }
+
+/* Chart */
+.chart-section { margin-top: 22px; }
+.chart-title { color: #fff; font-size: 0.95em; font-weight: 600; margin-bottom: 14px; }
+
+.chart-wrap {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+}
+
+canvas { display: block; max-width: 100%; }
+
+/* Records */
+.record-item {
+    background: #0a0a0a;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+.record-item:hover { border-color: #333; }
+
+.record-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.record-title { color: #fff; font-weight: 600; font-size: 0.95em; }
+.record-date { color: var(--muted); font-size: 0.82em; margin-top: 2px; }
+.record-type-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78em;
+    font-weight: 600;
+}
+
+.badge-fill { background: #0c2a0c; color: var(--green); border: 1px solid #1e4a1e; }
+.badge-trip { background: #1a1400; color: var(--warn); border: 1px solid #3a2c00; }
+
+.record-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px;
+    font-size: 0.86em;
+    color: #aaa;
+    line-height: 1.8;
+}
+
+.record-actions { margin-top: 12px; display: flex; gap: 8px; }
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #444;
+}
+
+.empty-state .icon { font-size: 2.5em; margin-bottom: 12px; opacity: 0.4; }
+.empty-state p { font-size: 0.9em; line-height: 1.7; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 9999;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Filter row */
+.filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-row select, .filter-row input {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px 12px;
+    font-size: 0.88em;
+}
+
+/* Export button */
+.export-btn {
+    border-color: var(--warn);
+    color: var(--warn);
+    font-size: 0.88em;
+    padding: 9px 16px;
+}
+
+.export-btn:hover { background: var(--warn); color: #000; }
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 30px 20px 20px;
+    color: #333;
+    font-size: 0.82em;
+    border-top: 1px solid #151515;
+    margin-top: 30px;
+    line-height: 1.8;
+}
+
+.footer span { color: #555; }
+.footer .heart { color: var(--green); }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .header h1 { font-size: 1.5em; }
+    .form-row { grid-template-columns: 1fr; }
+    .tabs { gap: 2px; }
+    .tab { padding: 10px 12px; font-size: 0.84em; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stat-value { font-size: 1.3em; }
+    button { padding: 10px 18px; font-size: 0.88em; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>⛽ حاسبة الوقود والمسافات</h1>
+        <p>تتبع استهلاك وقود سيارتك وخطط لرحلاتك بكفاءة</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('consumption', this)">معدل الاستهلاك</button>
+        <button class="tab" onclick="switchTab('trip', this)">تخطيط الرحلة</button>
+        <button class="tab" onclick="switchTab('records', this)">السجلات</button>
+        <button class="tab" onclick="switchTab('stats', this)">الإحصائيات</button>
+    </div>
+
+    <!-- Consumption Tab -->
+    <div id="consumption" class="tab-content active">
+        <div class="info-box">
+            <h4>كيف تحسب معدل استهلاك سيارتك؟</h4>
+            <p>عبي تنك البنزين كامل، سجل قراءة العداد، بعد فترة عبي التنك مرة ثانية وسجل القراءة الجديدة وكمية البنزين اللي عبيتها. البرنامج راح يحسب لك المعدل.</p>
+        </div>
+
+        <div class="section">
+            <h3>حساب معدل الاستهلاك</h3>
+
+            <div class="form-group">
+                <label for="recordLabel">اسم أو وصف التعبئة (اختياري)</label>
+                <input type="text" id="recordLabel" placeholder="مثال: رحلة الدمام، أسبوع العمل...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startKm">قراءة العداد الأولى (كم)</label>
+                    <input type="number" id="startKm" placeholder="مثال: 10000" min="0" step="0.1">
+                    <div class="input-hint">العداد عند التعبئة الأولى</div>
+                </div>
+                <div class="form-group">
+                    <label for="endKm">قراءة العداد الثانية (كم)</label>
+                    <input type="number" id="endKm" placeholder="مثال: 10500" min="0" step="0.1">
+                    <div class="input-hint">العداد عند التعبئة الثانية</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="liters">كمية الوقود (لتر)</label>
+                    <input type="number" id="liters" placeholder="مثال: 40" min="0" step="0.01">
+                    <div class="input-hint">كمية الوقود اللي عبيتها</div>
+                </div>
+                <div class="form-group">
+                    <label for="fuelPrice">سعر اللتر (ريال)</label>
+                    <input type="number" id="fuelPrice" placeholder="مثال: 2.33" min="0" step="0.01" value="2.33">
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button onclick="calculateConsumption()">احسب المعدل</button>
+                <button class="secondary" onclick="resetConsumptionForm()">مسح</button>
+            </div>
+        </div>
+
+        <div id="consumptionResult" style="display: none;">
+            <div class="result-box">
+                <h4>✅ نتيجة الحساب</h4>
+                <div class="result-item">
+                    <span class="result-label">المسافة المقطوعة</span>
+                    <span class="result-value" id="distanceTraveled">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">معدل الاستهلاك</span>
+                    <span class="result-value" id="avgConsumption">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">تكلفة الوقود المستهلك</span>
+                    <span class="result-value" id="fuelCost">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">تكلفة كل 100 كم</span>
+                    <span class="result-value" id="costPer100">—</span>
+                </div>
+                <div class="result-item" id="efficiencyRow">
+                    <span class="result-label">تقييم الاستهلاك</span>
+                    <span class="result-value" id="efficiencyRating">—</span>
+                </div>
+            </div>
+
+            <div class="save-area">
+                <button onclick="saveConsumptionRecord()">💾 حفظ في السجل</button>
+                <button class="secondary" onclick="resetConsumptionForm()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Tab -->
+    <div id="trip" class="tab-content">
+        <div class="info-box">
+            <h4>خطط لرحلتك</h4>
+            <p>أدخل معدل استهلاك سيارتك والمسافة اللي تبي تقطعها، وراح نحسب لك كم تحتاج وقود وكم التكلفة المتوقعة.</p>
+        </div>
+
+        <div class="section">
+            <h3>تخطيط الرحلة</h3>
+
+            <div class="form-group">
+                <label for="tripName">اسم الرحلة (اختياري)</label>
+                <input type="text" id="tripName" placeholder="مثال: رحلة أبها، زيارة العائلة...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tripDistance">مسافة الرحلة (كم)</label>
+                    <input type="number" id="tripDistance" placeholder="مثال: 450" min="0" step="0.1">
+                    <div class="input-hint">المسافة الكلية ذهاب وإياب</div>
+                </div>
+                <div class="form-group">
+                    <label for="tripConsumption">معدل استهلاك السيارة (لتر/100كم)</label>
+                    <input type="number" id="tripConsumption" placeholder="مثال: 8" min="0" step="0.1">
+                    <div class="input-hint">احسبه من تبويب معدل الاستهلاك</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tripFuelPrice">سعر اللتر (ريال)</label>
+                    <input type="number" id="tripFuelPrice" placeholder="مثال: 2.33" min="0" step="0.01" value="2.33">
+                </div>
+                <div class="form-group">
+                    <label for="tankCapacity">سعة التنك (لتر) - اختياري</label>
+                    <input type="number" id="tankCapacity" placeholder="مثال: 60" min="0" step="1">
+                    <div class="input-hint">لحساب عدد مرات التعبئة</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="passengers">عدد الركاب (اختياري)</label>
+                    <input type="number" id="passengers" placeholder="مثال: 4" min="1" step="1">
+                    <div class="input-hint">لحساب التكلفة على الفرد</div>
+                </div>
+                <div class="form-group">
+                    <label for="fuelBuffer">هامش أمان وقود %</label>
+                    <input type="number" id="fuelBuffer" placeholder="مثال: 10" min="0" max="50" step="5" value="10">
+                    <div class="input-hint">وقود إضافي للأمان</div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button onclick="calculateTrip()">احسب تكاليف الرحلة</button>
+                <button class="secondary" onclick="resetTripForm()">مسح</button>
+            </div>
+        </div>
+
+        <div id="tripResult" style="display: none;">
+            <div class="result-box">
+                <h4>🗺️ تفاصيل الرحلة</h4>
+                <div class="result-item">
+                    <span class="result-label">المسافة الكلية</span>
+                    <span class="result-value" id="tripTotalDistance">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">كمية الوقود المطلوبة</span>
+                    <span class="result-value" id="tripFuelNeeded">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">وقود إضافي (هامش الأمان)</span>
+                    <span class="result-value" id="tripBufferFuel">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">إجمالي الوقود الموصى به</span>
+                    <span class="result-value" id="tripTotalFuel">—</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">تكلفة الوقود المتوقعة</span>
+                    <span class="result-value" id="tripTotalCost">—</span>
+                </div>
+                <div class="result-item" id="refillItem" style="display: none;">
+                    <span class="result-label">عدد مرات التعبئة المتوقعة</span>
+                    <span class="result-value" id="tripRefills">—</span>
+                </div>
+                <div class="result-item" id="perPersonItem" style="display: none;">
+                    <span class="result-label">التكلفة على الفرد</span>
+                    <span class="result-value" id="tripPerPerson">—</span>
+                </div>
+            </div>
+
+            <div class="save-area" style="margin-top: 16px;">
+                <button onclick="saveTripRecord()">💾 حفظ الرحلة في السجل</button>
+                <button class="secondary" onclick="resetTripForm()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Records Tab -->
+    <div id="records" class="tab-content">
+        <div class="section">
+            <h3>سجل التعبئات والرحلات</h3>
+
+            <div class="filter-row">
+                <select id="filterType" onchange="loadRecords()">
+                    <option value="all">الكل</option>
+                    <option value="fill">التعبئات فقط</option>
+                    <option value="trip">الرحلات فقط</option>
+                </select>
+                <button class="export-btn" onclick="exportRecords()">📤 تصدير CSV</button>
+                <button class="danger" onclick="clearAllRecords()">🗑️ مسح الكل</button>
+            </div>
+
+            <div id="recordsList"></div>
+        </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div id="stats" class="tab-content">
+        <div class="section">
+            <h3>إحصائيات الاستهلاك</h3>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    <span>جميع الحقوق محفوظة</span> <span class="heart">♥</span> <span>عبدالله أحمد</span>
+    <br>
+    <span style="color:#2a2a2a;">حاسبة الوقود والمسافات — نسخة 2.0</span>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// Storage (persistent)
+// =====================
+async function storageGet(key) {
+    try {
+        if (window.storage) {
+            const r = await window.storage.get(key);
+            return r ? JSON.parse(r.value) : null;
+        }
+    } catch(e) {}
+    try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
+}
+
+async function storageSet(key, val) {
+    try {
+        if (window.storage) {
+            await window.storage.set(key, JSON.stringify(val));
+            return;
+        }
+    } catch(e) {}
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+async function getRecords() {
+    return (await storageGet('fuelRecords')) || [];
+}
+
+async function setRecords(records) {
+    await storageSet('fuelRecords', records);
+}
+
+// =====================
+// State
+// =====================
+let currentConsumption = null;
+let currentTrip = null;
+
+// =====================
+// Toast
+// =====================
+function showToast(msg, duration = 2800) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// =====================
+// Tab switching
+// =====================
+function switchTab(tabName, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById(tabName).classList.add('active');
+    if (tabName === 'records') loadRecords();
+    else if (tabName === 'stats') loadStats();
+}
+
+// =====================
+// Consumption
+// =====================
+function calculateConsumption() {
+    const startKm = parseFloat(document.getElementById('startKm').value) || 0;
+    const endKm   = parseFloat(document.getElementById('endKm').value)   || 0;
+    const liters  = parseFloat(document.getElementById('liters').value)  || 0;
+    const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
+
+    if (!startKm || !endKm || !liters || !fuelPrice) {
+        showToast('⚠️ تأكد من إدخال جميع القيم');
+        return;
+    }
+
+    if (endKm <= startKm) {
+        showToast('⚠️ قراءة العداد الثانية يجب أن تكون أكبر من الأولى');
+        return;
+    }
+
+    const distance    = endKm - startKm;
+    const consumption = (liters / distance) * 100;
+    const totalCost   = liters * fuelPrice;
+    const costPer100  = (totalCost / distance) * 100;
+
+    document.getElementById('distanceTraveled').textContent = distance.toFixed(1) + ' كم';
+    document.getElementById('avgConsumption').textContent   = consumption.toFixed(2) + ' لتر/100كم';
+    document.getElementById('fuelCost').textContent         = totalCost.toFixed(2) + ' ريال';
+    document.getElementById('costPer100').textContent       = costPer100.toFixed(2) + ' ريال';
+
+    // Efficiency rating
+    let rating = '', ratingColor = '';
+    if (consumption < 7)       { rating = '🌟 ممتاز جداً';   ratingColor = '#4ade80'; }
+    else if (consumption < 9)  { rating = '✅ جيد';           ratingColor = '#4ade80'; }
+    else if (consumption < 12) { rating = '🟡 متوسط';        ratingColor = '#f59e0b'; }
+    else if (consumption < 15) { rating = '🔴 مرتفع';        ratingColor = '#f87171'; }
+    else                       { rating = '🔴 مرتفع جداً';   ratingColor = '#f87171'; }
+
+    const ratingEl = document.getElementById('efficiencyRating');
+    ratingEl.textContent = rating;
+    ratingEl.style.color = ratingColor;
+
+    document.getElementById('consumptionResult').style.display = 'block';
+
+    currentConsumption = {
+        type: 'fill',
+        date: new Date().toISOString(),
+        label: document.getElementById('recordLabel').value.trim() || 'تعبئة وقود',
+        startKm, endKm, distance, liters, consumption, fuelPrice, totalCost, costPer100
+    };
+}
+
+function resetConsumptionForm() {
+    ['startKm','endKm','liters','recordLabel'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('consumptionResult').style.display = 'none';
+    currentConsumption = null;
+}
+
+async function saveConsumptionRecord() {
+    if (!currentConsumption) return;
+    const records = await getRecords();
+    records.unshift(currentConsumption);
+    if (records.length > 200) records.length = 200;
+    await setRecords(records);
+    showToast('✅ تم حفظ التعبئة بنجاح');
+    resetConsumptionForm();
+}
+
+// =====================
+// Trip
+// =====================
+function calculateTrip() {
+    const distance   = parseFloat(document.getElementById('tripDistance').value)    || 0;
+    const consumption= parseFloat(document.getElementById('tripConsumption').value) || 0;
+    const fuelPrice  = parseFloat(document.getElementById('tripFuelPrice').value)   || 0;
+    const tankCap    = parseFloat(document.getElementById('tankCapacity').value)    || 0;
+    const passengers = parseInt(document.getElementById('passengers').value)        || 0;
+    const buffer     = parseFloat(document.getElementById('fuelBuffer').value)      || 0;
+
+    if (!distance || !consumption || !fuelPrice) {
+        showToast('⚠️ تأكد من إدخال المسافة والاستهلاك والسعر');
+        return;
+    }
+
+    const fuelNeeded   = (distance / 100) * consumption;
+    const bufferFuel   = fuelNeeded * (buffer / 100);
+    const totalFuel    = fuelNeeded + bufferFuel;
+    const totalCost    = totalFuel * fuelPrice;
+
+    document.getElementById('tripTotalDistance').textContent = distance.toFixed(1) + ' كم';
+    document.getElementById('tripFuelNeeded').textContent    = fuelNeeded.toFixed(2) + ' لتر';
+    document.getElementById('tripBufferFuel').textContent    = bufferFuel.toFixed(2) + ' لتر (' + buffer + '%)';
+    document.getElementById('tripTotalFuel').textContent     = totalFuel.toFixed(2) + ' لتر';
+    document.getElementById('tripTotalCost').textContent     = totalCost.toFixed(2) + ' ريال';
+
+    if (tankCap > 0) {
+        const refills = Math.ceil(totalFuel / tankCap);
+        document.getElementById('tripRefills').textContent = refills + ' مرة';
+        document.getElementById('refillItem').style.display = 'flex';
+    } else {
+        document.getElementById('refillItem').style.display = 'none';
+    }
+
+    if (passengers > 1) {
+        document.getElementById('tripPerPerson').textContent = (totalCost / passengers).toFixed(2) + ' ريال';
+        document.getElementById('perPersonItem').style.display = 'flex';
+    } else {
+        document.getElementById('perPersonItem').style.display = 'none';
+    }
+
+    document.getElementById('tripResult').style.display = 'block';
+
+    currentTrip = {
+        type: 'trip',
+        date: new Date().toISOString(),
+        label: document.getElementById('tripName').value.trim() || 'رحلة',
+        distance, consumption, fuelPrice, fuelNeeded, bufferFuel, totalFuel,
+        totalCost, tankCap, passengers, buffer
+    };
+}
+
+function resetTripForm() {
+    ['tripDistance','tripConsumption','tankCapacity','tripName','passengers'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fuelBuffer').value = '10';
+    document.getElementById('tripResult').style.display = 'none';
+    currentTrip = null;
+}
+
+async function saveTripRecord() {
+    if (!currentTrip) return;
+    const records = await getRecords();
+    records.unshift(currentTrip);
+    if (records.length > 200) records.length = 200;
+    await setRecords(records);
+    showToast('✅ تم حفظ الرحلة بنجاح');
+    resetTripForm();
+}
+
+// =====================
+// Records
+// =====================
+async function loadRecords() {
+    const filterType = document.getElementById('filterType')?.value || 'all';
+    let records = await getRecords();
+
+    if (filterType !== 'all') records = records.filter(r => r.type === filterType);
+
+    const el = document.getElementById('recordsList');
+
+    if (records.length === 0) {
+        el.innerHTML = `<div class="empty-state">
+            <div class="icon">📋</div>
+            <p>لا يوجد سجلات محفوظة بعد<br>ابدأ بحساب معدل استهلاك سيارتك أو تخطيط رحلة</p>
+        </div>`;
+        return;
+    }
+
+    el.innerHTML = records.map((record, index) => {
+        const date = new Date(record.date);
+        const formattedDate = date.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+        const time = date.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+        const isFill = record.type !== 'trip';
+        const badgeClass = isFill ? 'badge-fill' : 'badge-trip';
+        const badgeText  = isFill ? 'تعبئة' : 'رحلة';
+
+        let details = '';
+        if (isFill) {
+            details = `
+                <span>📏 المسافة: <strong>${record.distance?.toFixed(1)} كم</strong></span>
+                <span>⚡ الاستهلاك: <strong>${record.consumption?.toFixed(2)} ل/100كم</strong></span>
+                <span>🛢️ الوقود: <strong>${record.liters?.toFixed(2)} لتر</strong></span>
+                <span>💰 التكلفة: <strong>${record.totalCost?.toFixed(2)} ريال</strong></span>
+                <span>🔢 العداد: <strong>${record.startKm?.toFixed(0)} → ${record.endKm?.toFixed(0)}</strong></span>
+            `;
+        } else {
+            details = `
+                <span>📏 المسافة: <strong>${record.distance?.toFixed(1)} كم</strong></span>
+                <span>🛢️ وقود مطلوب: <strong>${record.totalFuel?.toFixed(2)} لتر</strong></span>
+                <span>💰 التكلفة: <strong>${record.totalCost?.toFixed(2)} ريال</strong></span>
+                ${record.passengers > 1 ? `<span>👥 على الفرد: <strong>${(record.totalCost/record.passengers).toFixed(2)} ريال</strong></span>` : ''}
+            `;
+        }
+
+        // Get the actual index in full records array for deletion
+        return `
+            <div class="record-item">
+                <div class="record-header">
+                    <div>
+                        <div class="record-title">${record.label || (isFill ? 'تعبئة وقود' : 'رحلة')}</div>
+                        <div class="record-date">${formattedDate} — ${time}</div>
+                    </div>
+                    <span class="record-type-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="record-details">${details}</div>
+                <div class="record-actions">
+                    <button class="danger" onclick="deleteRecord(${index}, '${filterType}')">حذف</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function deleteRecord(filteredIndex, filterType) {
+    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+    let records = await getRecords();
+    let filtered = filterType === 'all' ? records : records.filter(r => r.type === filterType);
+    const target = filtered[filteredIndex];
+    // Find and remove from full records
+    const realIndex = records.indexOf(target);
+    if (realIndex > -1) records.splice(realIndex, 1);
+    await setRecords(records);
+    showToast('🗑️ تم حذف السجل');
+    loadRecords();
+}
+
+async function clearAllRecords() {
+    if (!confirm('هل أنت متأكد من مسح جميع السجلات؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    await setRecords([]);
+    showToast('🗑️ تم مسح جميع السجلات');
+    loadRecords();
+}
+
+async function exportRecords() {
+    const records = await getRecords();
+    if (records.length === 0) { showToast('⚠️ لا توجد سجلات للتصدير'); return; }
+
+    const headers = ['النوع','الاسم','التاريخ','المسافة (كم)','الاستهلاك (ل/100كم)','الوقود (لتر)','التكلفة (ريال)'];
+    const rows = records.map(r => [
+        r.type === 'trip' ? 'رحلة' : 'تعبئة',
+        r.label || '',
+        new Date(r.date).toLocaleDateString('ar-SA'),
+        r.distance?.toFixed(1) || '',
+        r.consumption?.toFixed(2) || '',
+        (r.liters || r.totalFuel)?.toFixed(2) || '',
+        r.totalCost?.toFixed(2) || ''
+    ]);
+
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'سجل_الوقود.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📤 تم تصدير السجلات بنجاح');
+}
+
+// =====================
+// Stats
+// =====================
+async function loadStats() {
+    const records = await getRecords();
+    const fills = records.filter(r => r.type !== 'trip');
+    const trips = records.filter(r => r.type === 'trip');
+    const statsContent = document.getElementById('statsContent');
+
+    if (records.length === 0) {
+        statsContent.innerHTML = `<div class="empty-state">
+            <div class="icon">📊</div>
+            <p>لا توجد بيانات كافية للإحصائيات<br>سجل تعبئات الوقود لمشاهدة الإحصائيات</p>
+        </div>`;
+        return;
+    }
+
+    const totalDistance = fills.reduce((s,r) => s + (r.distance||0), 0);
+    const totalLiters   = fills.reduce((s,r) => s + (r.liters||0), 0);
+    const totalCost     = records.reduce((s,r) => s + (r.totalCost||0), 0);
+    const avgConsumption= fills.length ? fills.reduce((s,r) => s + r.consumption, 0) / fills.length : 0;
+    const minC = fills.length ? Math.min(...fills.map(r => r.consumption)) : 0;
+    const maxC = fills.length ? Math.max(...fills.map(r => r.consumption)) : 0;
+    const totalTripKm   = trips.reduce((s,r) => s + (r.distance||0), 0);
+
+    statsContent.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">${fills.length}</div>
+                <div class="stat-label">عدد التعبئات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${trips.length}</div>
+                <div class="stat-label">الرحلات المخططة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${totalDistance.toFixed(0)}</div>
+                <div class="stat-label">إجمالي مسافة التعبئات (كم)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${totalLiters.toFixed(1)}</div>
+                <div class="stat-label">إجمالي الوقود (لتر)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${totalCost.toFixed(0)}</div>
+                <div class="stat-label">إجمالي التكلفة (ريال)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${avgConsumption.toFixed(2)}</div>
+                <div class="stat-label">متوسط الاستهلاك (ل/100كم)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${minC.toFixed(2)}</div>
+                <div class="stat-label">أفضل استهلاك (ل/100كم)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${maxC.toFixed(2)}</div>
+                <div class="stat-label">أسوأ استهلاك (ل/100كم)</div>
+            </div>
+            ${totalDistance > 0 ? `<div class="stat-card">
+                <div class="stat-value">${(totalCost / totalDistance * 100).toFixed(1)}</div>
+                <div class="stat-label">تكلفة 100 كم (ريال)</div>
+            </div>` : ''}
+        </div>
+
+        ${fills.length >= 2 ? `
+        <div class="chart-section">
+            <div class="chart-title">📈 معدل الاستهلاك عبر التعبئات (الأحدث أولاً)</div>
+            <div class="chart-wrap">
+                <canvas id="consumptionChart" height="180"></canvas>
+            </div>
+        </div>` : ''}
+
+        ${fills.length >= 2 ? `
+        <div class="chart-section" style="margin-top:16px;">
+            <div class="chart-title">💰 تكلفة الوقود عبر التعبئات</div>
+            <div class="chart-wrap">
+                <canvas id="costChart" height="180"></canvas>
+            </div>
+        </div>` : ''}
+    `;
+
+    if (fills.length >= 2) {
+        setTimeout(() => drawCharts(fills), 100);
+    }
+}
+
+function drawCharts(fills) {
+    const recent = [...fills].reverse().slice(-12); // last 12
+    const labels = recent.map((r, i) => r.label || ('تعبئة ' + (i+1)));
+    const consumptionData = recent.map(r => r.consumption);
+    const costData = recent.map(r => r.totalCost);
+
+    drawLineChart('consumptionChart', labels, consumptionData, 'لتر/100كم', '#4ade80');
+    drawLineChart('costChart', labels, costData, 'ريال', '#f59e0b');
+}
+
+function drawLineChart(canvasId, labels, data, unit, color) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.parentElement.clientWidth - 32;
+    const H = 180;
+    canvas.width = W;
+    canvas.height = H;
+
+    const pad = { top: 20, right: 20, bottom: 50, left: 55 };
+    const cW = W - pad.left - pad.right;
+    const cH = H - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const min = Math.min(...data) * 0.9;
+    const max = Math.max(...data) * 1.1;
+    const range = max - min || 1;
+
+    const xStep = cW / (data.length - 1);
+
+    function xPos(i) { return pad.left + i * xStep; }
+    function yPos(v) { return pad.top + cH - ((v - min) / range) * cH; }
+
+    // Grid lines
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 1;
+    for (let g = 0; g <= 4; g++) {
+        const y = pad.top + (g / 4) * cH;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(pad.left + cW, y);
+        ctx.stroke();
+
+        const val = max - (g / 4) * range;
+        ctx.fillStyle = '#555';
+        ctx.font = '10px IBM Plex Sans Arabic, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(1), pad.left - 6, y + 4);
+    }
+
+    // Area fill
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + cH);
+    grad.addColorStop(0, color + '33');
+    grad.addColorStop(1, color + '00');
+    ctx.beginPath();
+    ctx.moveTo(xPos(0), yPos(data[0]));
+    data.forEach((v, i) => { if (i > 0) ctx.lineTo(xPos(i), yPos(v)); });
+    ctx.lineTo(xPos(data.length-1), pad.top + cH);
+    ctx.lineTo(xPos(0), pad.top + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    data.forEach((v, i) => {
+        if (i === 0) ctx.moveTo(xPos(i), yPos(v));
+        else ctx.lineTo(xPos(i), yPos(v));
+    });
+    ctx.stroke();
+
+    // Dots & labels
+    data.forEach((v, i) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(xPos(i), yPos(v), 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // X label (truncated)
+        const lbl = labels[i].length > 6 ? labels[i].slice(0,5)+'…' : labels[i];
+        ctx.fillStyle = '#666';
+        ctx.font = '9px IBM Plex Sans Arabic, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.save();
+        ctx.translate(xPos(i), H - 10);
+        ctx.rotate(-0.4);
+        ctx.fillText(lbl, 0, 0);
+        ctx.restore();
+    });
+
+    // Unit label
+    ctx.fillStyle = '#444';
+    ctx.font = '10px IBM Plex Sans Arabic, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(unit, pad.left + 4, pad.top - 6);
+}
+</script>
+</body>
+</html>
